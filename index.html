@@ -724,6 +724,25 @@
         <b>PAUSE</b> — ESC (top-right)
       </div>
 
+      <div class="controls-box" style="border-left-color: var(--green); margin-top: 10px;">
+        <b style="color:var(--green);">HOW TO PLAY</b><br>
+        🔥 <b>Fires</b> spread between trees — douse fast, save the grove<br>
+        🪓 <b>Poachers</b> walk to trees to chop — stand next to them and act<br>
+        🟡 <b>Sick trees</b> (yellow ?) need water before they die<br>
+        📜 <b>Nōgyō zensho scrolls</b> — rare pickups grant buffs (rain, heal, speed)<br>
+        💧 Bucket holds 3 charges — refill on the river 川
+      </div>
+
+      <div class="controls-box" style="border-left-color: var(--gold); margin-top: 10px; font-size: 12px;">
+        <b style="color:var(--gold);">TIPS</b><br>
+        · Four waves of rising difficulty: 春 → 夏 → 秋 → 冬<br>
+        · 夏 Summer opens with a scripted Meireki fire — be ready<br>
+        · 秋 Autumn brings Kinokuniya's crew — tougher poachers (hit twice)<br>
+        · Tree values: sugi 杉 = 15 · matsu 松 = 20 · hinoki 檜 = 40<br>
+        · Wind direction biases fire spread — watch the 風 arrow<br>
+        · Score = trees saved × value + fire/poacher/tending bonuses
+      </div>
+
       <div class="btn-row">
         <button class="edo-btn" id="start-btn">BEGIN · 出陣</button>
       </div>
@@ -1571,8 +1590,10 @@
       dx /= len; dy /= len;
       if (Math.abs(dx) > Math.abs(dy)) player.dir = dx > 0 ? 'right' : 'left';
       else player.dir = dy > 0 ? 'down' : 'up';
+      // Clamp so player never walks under top/bottom HUD bars
+      const PAD_TOP = 24, PAD_BOTTOM = 30;
       player.x = Math.max(4, Math.min(W - 4, player.x + dx * player.speed * speedMul));
-      player.y = Math.max(4, Math.min(H - 4, player.y + dy * player.speed * speedMul));
+      player.y = Math.max(PAD_TOP, Math.min(H - PAD_BOTTOM, player.y + dy * player.speed * speedMul));
       player.animTimer += dt;
       if (player.animTimer > 0.14) { player.animFrame = (player.animFrame + 1) % 4; player.animTimer = 0; }
       player.stepSfxTimer += dt;
