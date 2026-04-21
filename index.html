@@ -2469,7 +2469,14 @@
   document.getElementById('start-btn').addEventListener('click', startGame);
   document.getElementById('again-btn').addEventListener('click', startGame);
   document.getElementById('resume-btn').addEventListener('click', togglePause);
-  document.getElementById('abandon-btn').addEventListener('click', () => { togglePause(); endGame(); });
+  document.getElementById('abandon-btn').addEventListener('click', () => {
+    state.running = false;
+    state.paused = false;
+    document.getElementById('pause-screen').classList.add('hidden');
+    document.getElementById('end-screen').classList.add('hidden');
+    document.getElementById('title-screen').classList.remove('hidden');
+    hideHUDDom();
+  });
   document.getElementById('title-btn').addEventListener('click', () => {
     document.getElementById('end-screen').classList.add('hidden');
     document.getElementById('title-screen').classList.remove('hidden');
