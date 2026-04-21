@@ -717,20 +717,13 @@
 
       <div class="controls-box keyboard">
         <b>MOVE</b> — WASD / Arrows<br>
-        <b>ACT</b> — SPACE (near hazard)<br>
-        <b>REFILL</b> — stand on river 川<br>
-        <b>PAUSE</b> — ESC &nbsp; · &nbsp; <b>MUTE</b> — M
+        <b>ACT</b> — SPACE near 🔥 fire · 🪓 poacher · 🟡 sick tree<br>
+        Stand on 川 river to refill · ESC pause · M mute
       </div>
       <div class="controls-box mobile" style="display:none;">
-        <b>MOVE</b> — joystick (bottom-left)<br>
-        <b>ACTION</b> — red button (bottom-right)<br>
-        <b>REFILL</b> — walk onto river 川<br>
-        <b>PAUSE</b> — ESC (top-right)
-      </div>
-
-      <div class="controls-box" style="border-left-color: var(--green); margin-top: 10px;">
-        🔥 <b>Douse fires</b> · 🪓 <b>Chase poachers</b> · 💧 <b>Refill at river</b><br>
-        Survive four waves: 春 → 夏 → 秋 → 冬
+        <b>MOVE</b> — joystick<br>
+        <b>ACTION</b> — red button near 🔥 🪓 🟡<br>
+        Walk on 川 river to refill · ESC pause
       </div>
 
       <div class="btn-row">
@@ -1772,15 +1765,11 @@
       if (p.y > H || p.life <= 0) state.particles.splice(i, 1);
     }
 
-    // End if all trees are dead, OR if no trees are recoverable (no healthy
-    // or sick remain) — the last chopped/burning ones are just waiting to die,
-    // so we short-circuit to the end screen immediately.
-    const deadCount   = trees.filter(t => t.status === 'dead').length;
-    const recoverable = trees.some(t => t.status === 'healthy' || t.status === 'sick');
-    if (deadCount === trees.length || !recoverable) {
-      endGame();
-      return;
-    }
+    // End only when every tree is actually dead. Burning and chopping trees
+    // can still be saved by player action (douse fire, chase poacher), so
+    // we should NOT cut the round short just because healthy/sick count is 0.
+    const aliveTrees = trees.filter(t => t.status !== 'dead').length;
+    if (aliveTrees === 0) { endGame(); return; }
 
     if (state.messageT > 0) state.messageT--;
     if (state.seasonBanner > 0) state.seasonBanner--;
