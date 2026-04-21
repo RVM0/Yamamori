@@ -38,12 +38,23 @@
     position: relative;
     width: 960px;
     height: 640px;
+    max-width: 100vw;
+    max-height: 100vh;
     box-shadow:
       0 0 80px rgba(0,0,0,0.9),
       inset 0 0 0 3px var(--gold),
       inset 0 0 0 10px var(--ink);
     background: #000;
     image-rendering: pixelated;
+  }
+  @media (max-width: 1000px), (max-height: 680px) {
+    body { padding: 0; overflow: hidden; }
+    #game-wrap {
+      width: 100vw;
+      height: 100vh;
+      aspect-ratio: auto;
+      box-shadow: inset 0 0 0 2px var(--gold);
+    }
   }
   canvas {
     display: block;
@@ -321,6 +332,111 @@
   #hud-buff     { color: #9b8a6a; }
   #hud-buff.active { color: var(--gold); }
 
+  /* ================= MOBILE TOUCH CONTROLS ================= */
+  .mobile-controls {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    pointer-events: none;
+  }
+  body.touch .mobile-controls { display: block; }
+  body.touch .hud-note { display: none; }
+
+  .mc-btn {
+    position: absolute;
+    pointer-events: auto;
+    background: rgba(15, 11, 8, 0.78);
+    border: 2px solid var(--gold);
+    color: var(--paper);
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-weight: 700;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+    transition: transform 0.08s, background 0.08s;
+  }
+  .mc-btn:active, .mc-btn.pressed {
+    background: var(--red);
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+  }
+
+  /* D-Pad (bottom-left) */
+  .dpad {
+    position: absolute;
+    left: 18px;
+    bottom: 60px;
+    width: 156px;
+    height: 156px;
+    pointer-events: none;
+  }
+  .dpad .mc-btn {
+    width: 52px;
+    height: 52px;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+  }
+  .dpad .d-up    { top: 0;   left: 52px; }
+  .dpad .d-down  { top: 104px; left: 52px; }
+  .dpad .d-left  { top: 52px; left: 0; }
+  .dpad .d-right { top: 52px; left: 104px; }
+
+  /* Action button (bottom-right — SPACE equivalent) */
+  .mc-action {
+    right: 24px;
+    bottom: 80px;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    font-size: 18px;
+    letter-spacing: 1px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(178, 58, 58, 0.88);
+    border-color: var(--gold);
+    color: var(--paper);
+  }
+  .mc-action .act-kanji { font-size: 22px; margin-top: 2px; color: #ffe68a; }
+  .mc-action:active, .mc-action.pressed {
+    background: var(--redDk, #7a1f1f);
+  }
+
+  /* Secondary SPACE button (bottom-right, next to action — for dual-hand reach) */
+  .mc-space2 {
+    right: 148px;
+    bottom: 100px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 11, 8, 0.82);
+  }
+
+  /* ESC / Pause button (top-right) */
+  .mc-esc {
+    top: 46px;
+    right: 16px;
+    width: 56px;
+    height: 40px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
   .bucket-icon {
     width: 12px;
     height: 16px;
@@ -468,6 +584,22 @@
   <div id="action-hint" class="action-hint hidden">[SPACE] ACT</div>
   <div id="toast" class="toast hidden"></div>
   <div id="season-banner" class="season-banner hidden"></div>
+
+  <!-- Mobile touch controls -->
+  <div id="mobile-controls" class="mobile-controls">
+    <button class="mc-btn mc-esc" data-key="escape" aria-label="Pause">ESC</button>
+    <div class="dpad">
+      <button class="mc-btn d-up"    data-key="w" aria-label="Up">▲</button>
+      <button class="mc-btn d-down"  data-key="s" aria-label="Down">▼</button>
+      <button class="mc-btn d-left"  data-key="a" aria-label="Left">◀</button>
+      <button class="mc-btn d-right" data-key="d" aria-label="Right">▶</button>
+    </div>
+    <button class="mc-btn mc-space2" data-action="1" aria-label="Action">SPACE</button>
+    <button class="mc-btn mc-action" data-action="1" aria-label="Act">
+      <span>ACT</span>
+      <span class="act-kanji">行</span>
+    </button>
+  </div>
 
   <!-- Title screen -->
   <div id="title-screen" class="overlay">
@@ -950,6 +1082,59 @@
       });
       return;
     }
+  }
+
+  // =========================================================================
+  // MOBILE TOUCH CONTROLS
+  // =========================================================================
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
+                  || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  if (isTouch) document.body.classList.add('touch');
+
+  function wireTouchControls() {
+    const mc = document.getElementById('mobile-controls');
+    if (!mc) return;
+
+    // Movement buttons — press = key down, release = key up
+    mc.querySelectorAll('[data-key]').forEach(btn => {
+      const k = btn.getAttribute('data-key');
+      const press = (e) => {
+        e.preventDefault();
+        initAudio();
+        keys[k] = true;
+        btn.classList.add('pressed');
+        if (k === 'escape') {
+          if (state && state.running) togglePause();
+        }
+      };
+      const release = (e) => {
+        if (e) e.preventDefault();
+        keys[k] = false;
+        btn.classList.remove('pressed');
+      };
+      btn.addEventListener('touchstart', press, { passive: false });
+      btn.addEventListener('touchend', release);
+      btn.addEventListener('touchcancel', release);
+      btn.addEventListener('mousedown', press);
+      btn.addEventListener('mouseup', release);
+      btn.addEventListener('mouseleave', release);
+    });
+
+    // Action buttons — fire doAction on tap
+    mc.querySelectorAll('[data-action]').forEach(btn => {
+      const fire = (e) => {
+        e.preventDefault();
+        initAudio();
+        btn.classList.add('pressed');
+        if (state && state.running && !state.paused) doAction();
+        setTimeout(() => btn.classList.remove('pressed'), 120);
+      };
+      btn.addEventListener('touchstart', fire, { passive: false });
+      btn.addEventListener('click', fire);
+    });
+
+    // Prevent accidental scrolling/zoom
+    mc.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   }
 
   // =========================================================================
@@ -1860,6 +2045,8 @@
     if (!state || !state.running) { hideHUDDom(); return; }
     HUD.top.classList.remove('hidden');
     HUD.bottom.classList.remove('hidden');
+    const mc = document.getElementById('mobile-controls');
+    if (mc && isTouch) mc.style.display = 'block';
 
     const mm = Math.floor(Math.max(0, state.timeLeft) / 60);
     const ss = Math.floor(Math.max(0, state.timeLeft) % 60).toString().padStart(2, '0');
@@ -1940,6 +2127,8 @@
     HUD.hint.classList.add('hidden');
     HUD.toast.classList.add('hidden');
     HUD.banner.classList.add('hidden');
+    const mc = document.getElementById('mobile-controls');
+    if (mc) mc.style.display = 'none';
   }
 
   function drawHUD() {
@@ -2092,6 +2281,8 @@
     document.getElementById('title-screen').classList.remove('hidden');
     hideHUDDom();
   });
+
+  wireTouchControls();
 
   // draw preview on title
   state = newState();
