@@ -498,18 +498,9 @@
     justify-content: center;
     border-radius: 6px;
   }
-  /* Fullscreen toggle (top-right, below ESC) */
-  .mc-fs {
-    top: calc(84px + env(safe-area-inset-top, 0px));
-    right: calc(12px + env(safe-area-inset-right, 0px));
-    width: 40px;
-    height: 36px;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-  }
+  /* On touch devices, hide the floating action hint — the ACTION button just
+     acts; toasts still confirm what happened. Desktop keyboard keeps the hint. */
+  body.touch .action-hint { display: none !important; }
 
   /* Portrait-rotate hint */
   #portrait-hint {
@@ -688,10 +679,9 @@
   <div id="toast" class="toast hidden"></div>
   <div id="season-banner" class="season-banner hidden"></div>
 
-  <!-- Mobile touch controls: ESC top-right, joystick bottom-left, SPACE bottom-right -->
+  <!-- Mobile touch controls: ESC top-right, joystick bottom-left, ACTION bottom-right -->
   <div id="mobile-controls" class="mobile-controls">
     <button class="mc-btn mc-esc" data-key="escape" aria-label="Pause">ESC</button>
-    <button class="mc-btn mc-fs" id="fs-toggle" aria-label="Fullscreen">⛶</button>
     <div id="joystick" class="joystick" aria-label="Movement">
       <div class="knob"></div>
     </div>
@@ -1338,18 +1328,6 @@
       joy.addEventListener('mousedown', onStart);
       window.addEventListener('mousemove', (e) => { if (activeId === 'mouse') onMove(e); });
       window.addEventListener('mouseup', (e) => { if (activeId === 'mouse') onEnd(e); });
-    }
-
-    // Fullscreen toggle button
-    const fsBtn = document.getElementById('fs-toggle');
-    if (fsBtn) {
-      const toggle = (e) => {
-        e.preventDefault();
-        initAudio();
-        if (isFullscreen()) exitFullscreen(); else enterFullscreen();
-      };
-      fsBtn.addEventListener('touchstart', toggle, { passive: false });
-      fsBtn.addEventListener('click', toggle);
     }
 
     // Prevent accidental scrolling/zoom on controls container
@@ -2527,7 +2505,14 @@
   }
 
   function startClickHandler(e) {
-    if (isTouch) enterFullscreen();  // sync call in gesture chain
+    if (isTouch) {
+      enterFullscreen();               // Android Chrome / iPad Safari true fullscreen
+      // iOS Safari workaround: nudge scroll to collapse the URL/tab bar.
+      setTimeout(() => {
+        try { window.scrollTo({ top: 1, left: 0, behavior: 'instant' }); } catch (e) {}
+        try { document.documentElement.scrollTop = 1; document.body.scrollTop = 1; } catch (e) {}
+      }, 50);
+    }
     startGame();
   }
   document.getElementById('start-btn').addEventListener('click', startClickHandler);
