@@ -494,6 +494,18 @@
     justify-content: center;
     border-radius: 6px;
   }
+  /* Fullscreen toggle (top-right, below ESC) */
+  .mc-fs {
+    top: calc(84px + env(safe-area-inset-top, 0px));
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    width: 40px;
+    height: 36px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
 
   /* Portrait-rotate hint */
   #portrait-hint {
@@ -675,10 +687,11 @@
   <!-- Mobile touch controls: ESC top-right, joystick bottom-left, SPACE bottom-right -->
   <div id="mobile-controls" class="mobile-controls">
     <button class="mc-btn mc-esc" data-key="escape" aria-label="Pause">ESC</button>
+    <button class="mc-btn mc-fs" id="fs-toggle" aria-label="Fullscreen">⛶</button>
     <div id="joystick" class="joystick" aria-label="Movement">
       <div class="knob"></div>
     </div>
-    <button class="mc-btn mc-action" data-action="1" aria-label="Space">SPACE</button>
+    <button class="mc-btn mc-action" data-action="1" aria-label="Action">ACTION</button>
   </div>
 
   <!-- Title screen -->
@@ -706,7 +719,7 @@
       </div>
       <div class="controls-box mobile" style="display:none;">
         <b>MOVE</b> — joystick (bottom-left)<br>
-        <b>SPACE</b> — red button (bottom-right)<br>
+        <b>ACTION</b> — red button (bottom-right)<br>
         <b>REFILL</b> — walk onto river 川<br>
         <b>PAUSE</b> — ESC (top-right)
       </div>
@@ -1318,16 +1331,60 @@
       window.addEventListener('mouseup', (e) => { if (activeId === 'mouse') onEnd(e); });
     }
 
+    // Fullscreen toggle button
+    const fsBtn = document.getElementById('fs-toggle');
+    if (fsBtn) {
+      const toggle = (e) => {
+        e.preventDefault();
+        initAudio();
+        if (isFullscreen()) exitFullscreen(); else enterFullscreen();
+      };
+      fsBtn.addEventListener('touchstart', toggle, { passive: false });
+      fsBtn.addEventListener('click', toggle);
+    }
+
     // Prevent accidental scrolling/zoom on controls container
     mc.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   }
 
-  // Request actual browser fullscreen on mobile (iOS Safari ignores but tries)
+  // Request browser fullscreen. Must be called synchronously from a user gesture.
+  function enterFullscreen() {
+    const el = document.documentElement;
+    const req = el.requestFullscreen
+             || el.webkitRequestFullscreen
+             || el.webkitRequestFullScreen
+             || el.mozRequestFullScreen
+             || el.msRequestFullscreen;
+    if (req) {
+      try {
+        const p = req.call(el, { navigationUI: 'hide' });
+        if (p && p.catch) p.catch(() => {});
+      } catch (e) {}
+    }
+    // Also try to lock landscape on devices that support it
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+      }
+    } catch (e) {}
+  }
+  function exitFullscreen() {
+    const ex = document.exitFullscreen
+            || document.webkitExitFullscreen
+            || document.webkitCancelFullScreen
+            || document.mozCancelFullScreen
+            || document.msExitFullscreen;
+    if (ex) { try { ex.call(document); } catch (e) {} }
+  }
+  function isFullscreen() {
+    return !!(document.fullscreenElement
+           || document.webkitFullscreenElement
+           || document.mozFullScreenElement
+           || document.msFullscreenElement);
+  }
   function requestFullscreenIfMobile() {
     if (!isTouch) return;
-    const el = document.documentElement;
-    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-    if (req) { try { req.call(el); } catch (e) {} }
+    if (!isFullscreen()) enterFullscreen();
   }
 
   // =========================================================================
@@ -2396,7 +2453,6 @@
   // =========================================================================
   function startGame() {
     initAudio();
-    requestFullscreenIfMobile();
     state = newState();
     state.running = true;
     state.seasonBanner = 210;
@@ -2466,8 +2522,12 @@
     document.getElementById('end-screen').classList.remove('hidden');
   }
 
-  document.getElementById('start-btn').addEventListener('click', startGame);
-  document.getElementById('again-btn').addEventListener('click', startGame);
+  function startClickHandler(e) {
+    if (isTouch) enterFullscreen();  // sync call in gesture chain
+    startGame();
+  }
+  document.getElementById('start-btn').addEventListener('click', startClickHandler);
+  document.getElementById('again-btn').addEventListener('click', startClickHandler);
   document.getElementById('resume-btn').addEventListener('click', togglePause);
   document.getElementById('abandon-btn').addEventListener('click', () => {
     state.running = false;
