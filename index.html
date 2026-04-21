@@ -152,21 +152,19 @@
       repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(42,31,20,0.025) 14px, rgba(42,31,20,0.025) 15px),
       radial-gradient(ellipse at top, rgba(42,31,20,0.04), transparent 70%);
   }
-  .paper-panel { isolation: isolate; }
+  /* Red dividers flow with panel content so they never overlap scrolled
+     glossary/history content — they move up and down with the scroll. */
   .paper-panel::before, .paper-panel::after {
     content: "";
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    display: block;
     width: 82%;
     height: 2px;
     background: var(--red);
-    z-index: 0;
+    margin: 0 auto;
     pointer-events: none;
   }
-  .paper-panel::before { top: 12px; }
-  .paper-panel::after  { bottom: 12px; }
-  .paper-panel > * { position: relative; z-index: 1; }
+  .paper-panel::before { margin-bottom: 18px; }
+  .paper-panel::after  { margin-top: 18px; }
   .paper-panel::-webkit-scrollbar { width: 10px; }
   .paper-panel::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
   .paper-panel::-webkit-scrollbar-thumb { background: var(--ink); }
@@ -707,12 +705,12 @@
 
       <div class="controls-box keyboard">
         <b>MOVE</b> — WASD / Arrows<br>
-        <b>ACT</b> — SPACE near 🔥 fire · 🪓 poacher · 🟡 sick tree<br>
+        <b>ACT</b> — SPACE near 🔥 fire · 🪓 poacher · 🍂 sick tree<br>
         Stand on 川 river to refill · ESC pause · M mute
       </div>
       <div class="controls-box mobile" style="display:none;">
         <b>MOVE</b> — joystick<br>
-        <b>ACTION</b> — red button near 🔥 🪓 🟡<br>
+        <b>ACTION</b> — red button near 🔥 🪓 🍂<br>
         Walk on 川 river to refill · ESC pause
       </div>
 
