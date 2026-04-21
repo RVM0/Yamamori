@@ -425,64 +425,60 @@
     box-shadow: 0 2px 0 rgba(0,0,0,0.3);
   }
 
-  /* D-Pad (bottom-left) */
-  .dpad {
+  /* JOYSTICK (bottom-left) — analog movement */
+  .joystick {
     position: absolute;
-    left: calc(12px + env(safe-area-inset-left, 0px));
+    left: calc(24px + env(safe-area-inset-left, 0px));
     bottom: calc(40px + env(safe-area-inset-bottom, 0px));
-    width: 144px;
-    height: 144px;
-    pointer-events: none;
-  }
-  .dpad .mc-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-  }
-  .dpad .d-up    { top: 0;    left: 48px; }
-  .dpad .d-down  { top: 96px; left: 48px; }
-  .dpad .d-left  { top: 48px; left: 0; }
-  .dpad .d-right { top: 48px; left: 96px; }
-
-  /* Primary ACT button (bottom-right) — replaces SPACE */
-  .mc-action {
-    right: calc(16px + env(safe-area-inset-right, 0px));
-    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-    width: 92px;
-    height: 92px;
+    width: 130px;
+    height: 130px;
     border-radius: 50%;
-    font-size: 15px;
-    letter-spacing: 1px;
+    background: rgba(15, 11, 8, 0.55);
+    border: 2px solid rgba(201, 161, 74, 0.65);
+    pointer-events: auto;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3), inset 0 0 30px rgba(0,0,0,0.35);
+  }
+  .joystick .knob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 60px;
+    height: 60px;
+    margin-left: -30px;
+    margin-top: -30px;
+    border-radius: 50%;
+    background: rgba(178, 58, 58, 0.9);
+    border: 2px solid var(--gold);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4);
+    transition: background 0.08s;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .joystick.active .knob { background: var(--red); }
+
+  /* Primary SPACE button (bottom-right) — single action button, labeled SPACE */
+  .mc-action {
+    right: calc(24px + env(safe-area-inset-right, 0px));
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    font-size: 18px;
+    letter-spacing: 2px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(178, 58, 58, 0.88);
+    background: rgba(178, 58, 58, 0.9);
     border-color: var(--gold);
+    border-width: 3px;
     color: var(--paper);
+    font-weight: 800;
   }
-  .mc-action .act-kanji { font-size: 18px; margin-top: 1px; color: #ffe68a; }
   .mc-action:active, .mc-action.pressed {
     background: var(--redDk, #7a1f1f);
-  }
-
-  /* Secondary SPACE button (upper-right, above ACT — dual-hand reach) */
-  .mc-space2 {
-    right: calc(24px + env(safe-area-inset-right, 0px));
-    bottom: calc(176px + env(safe-area-inset-bottom, 0px));
-    width: 62px;
-    height: 62px;
-    border-radius: 50%;
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(15, 11, 8, 0.82);
-    color: #ffe68a;
+    transform: translateY(3px);
   }
 
   /* ESC / Pause button (top-right) */
@@ -676,20 +672,13 @@
   <div id="toast" class="toast hidden"></div>
   <div id="season-banner" class="season-banner hidden"></div>
 
-  <!-- Mobile touch controls -->
+  <!-- Mobile touch controls: ESC top-right, joystick bottom-left, SPACE bottom-right -->
   <div id="mobile-controls" class="mobile-controls">
     <button class="mc-btn mc-esc" data-key="escape" aria-label="Pause">ESC</button>
-    <div class="dpad">
-      <button class="mc-btn d-up"    data-key="w" aria-label="Up">▲</button>
-      <button class="mc-btn d-down"  data-key="s" aria-label="Down">▼</button>
-      <button class="mc-btn d-left"  data-key="a" aria-label="Left">◀</button>
-      <button class="mc-btn d-right" data-key="d" aria-label="Right">▶</button>
+    <div id="joystick" class="joystick" aria-label="Movement">
+      <div class="knob"></div>
     </div>
-    <button class="mc-btn mc-space2" data-action="1" aria-label="Action">SPACE</button>
-    <button class="mc-btn mc-action" data-action="1" aria-label="Act">
-      <span>ACT</span>
-      <span class="act-kanji">行</span>
-    </button>
+    <button class="mc-btn mc-action" data-action="1" aria-label="Space">SPACE</button>
   </div>
 
   <!-- Title screen -->
@@ -716,8 +705,8 @@
         <b>PAUSE</b> — ESC &nbsp; · &nbsp; <b>MUTE</b> — M
       </div>
       <div class="controls-box mobile" style="display:none;">
-        <b>MOVE</b> — D-pad (bottom-left)<br>
-        <b>ACT</b> — red button (bottom-right)<br>
+        <b>MOVE</b> — joystick (bottom-left)<br>
+        <b>SPACE</b> — red button (bottom-right)<br>
         <b>REFILL</b> — walk onto river 川<br>
         <b>PAUSE</b> — ESC (top-right)
       </div>
@@ -1213,16 +1202,17 @@
     const mc = document.getElementById('mobile-controls');
     if (!mc) return;
 
-    // Movement buttons — press = key down, release = key up
+    // ESC / pause button
     mc.querySelectorAll('[data-key]').forEach(btn => {
       const k = btn.getAttribute('data-key');
       const press = (e) => {
         e.preventDefault();
         initAudio();
-        keys[k] = true;
         btn.classList.add('pressed');
         if (k === 'escape') {
           if (state && state.running) togglePause();
+        } else {
+          keys[k] = true;
         }
       };
       const release = (e) => {
@@ -1238,7 +1228,7 @@
       btn.addEventListener('mouseleave', release);
     });
 
-    // Action buttons — fire doAction on tap
+    // SPACE / action button — fire doAction on tap
     mc.querySelectorAll('[data-action]').forEach(btn => {
       const fire = (e) => {
         e.preventDefault();
@@ -1251,8 +1241,93 @@
       btn.addEventListener('click', fire);
     });
 
-    // Prevent accidental scrolling/zoom
+    // Joystick — analog movement translated to WASD key states
+    const joy = document.getElementById('joystick');
+    if (joy) {
+      const knob = joy.querySelector('.knob');
+      const radius = 34;       // max knob travel
+      const dead   = 0.22;     // dead-zone ratio
+      let activeId = null;
+
+      const clearKeys = () => { keys['w'] = keys['a'] = keys['s'] = keys['d'] = false; };
+
+      const applyVector = (nx, ny) => {
+        // nx, ny in range [-1, 1]
+        const mag = Math.hypot(nx, ny);
+        if (mag < dead) { clearKeys(); return; }
+        // 8-way mapping
+        keys['a'] = nx < -dead * 0.6;
+        keys['d'] = nx >  dead * 0.6;
+        keys['w'] = ny < -dead * 0.6;
+        keys['s'] = ny >  dead * 0.6;
+      };
+
+      const moveKnob = (px, py) => {
+        const r = joy.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top  + r.height / 2;
+        let dx = px - cx;
+        let dy = py - cy;
+        const mag = Math.hypot(dx, dy);
+        if (mag > radius) { dx = dx / mag * radius; dy = dy / mag * radius; }
+        knob.style.transform = `translate(${dx}px, ${dy}px)`;
+        applyVector(dx / radius, dy / radius);
+      };
+
+      const onStart = (e) => {
+        e.preventDefault();
+        initAudio();
+        joy.classList.add('active');
+        const t = e.touches ? e.touches[0] : e;
+        activeId = e.touches ? t.identifier : 'mouse';
+        moveKnob(t.clientX, t.clientY);
+      };
+      const onMove = (e) => {
+        if (activeId === null) return;
+        e.preventDefault();
+        let t;
+        if (e.touches) {
+          for (const touch of e.touches) {
+            if (touch.identifier === activeId) { t = touch; break; }
+          }
+          if (!t) return;
+        } else { t = e; }
+        moveKnob(t.clientX, t.clientY);
+      };
+      const onEnd = (e) => {
+        if (activeId === null) return;
+        if (e.touches) {
+          let stillHeld = false;
+          for (const touch of e.touches) {
+            if (touch.identifier === activeId) { stillHeld = true; break; }
+          }
+          if (stillHeld) return;
+        }
+        activeId = null;
+        joy.classList.remove('active');
+        knob.style.transform = 'translate(0, 0)';
+        clearKeys();
+      };
+
+      joy.addEventListener('touchstart', onStart, { passive: false });
+      window.addEventListener('touchmove',  onMove,  { passive: false });
+      window.addEventListener('touchend',   onEnd);
+      window.addEventListener('touchcancel', onEnd);
+      joy.addEventListener('mousedown', onStart);
+      window.addEventListener('mousemove', (e) => { if (activeId === 'mouse') onMove(e); });
+      window.addEventListener('mouseup', (e) => { if (activeId === 'mouse') onEnd(e); });
+    }
+
+    // Prevent accidental scrolling/zoom on controls container
     mc.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+  }
+
+  // Request actual browser fullscreen on mobile (iOS Safari ignores but tries)
+  function requestFullscreenIfMobile() {
+    if (!isTouch) return;
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (req) { try { req.call(el); } catch (e) {} }
   }
 
   // =========================================================================
@@ -2321,6 +2396,7 @@
   // =========================================================================
   function startGame() {
     initAudio();
+    requestFullscreenIfMobile();
     state = newState();
     state.running = true;
     state.seasonBanner = 210;
