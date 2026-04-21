@@ -1587,8 +1587,11 @@
       dx /= len; dy /= len;
       if (Math.abs(dx) > Math.abs(dy)) player.dir = dx > 0 ? 'right' : 'left';
       else player.dir = dy > 0 ? 'down' : 'up';
-      // Clamp so player never walks under top/bottom HUD bars
-      const PAD_TOP = 24, PAD_BOTTOM = 30;
+      // Clamp so the forest keeper never walks behind the top/bottom HUD bars.
+      // Values are generous enough to cover the larger HUD footprint on mobile
+      // (where object-fit scaling makes the bars cover more canvas pixels) plus
+      // the player sprite's head (11px) and feet (6px) offsets.
+      const PAD_TOP = 44, PAD_BOTTOM = 44;
       player.x = Math.max(4, Math.min(W - 4, player.x + dx * player.speed * speedMul));
       player.y = Math.max(PAD_TOP, Math.min(H - PAD_BOTTOM, player.y + dy * player.speed * speedMul));
       player.animTimer += dt;
@@ -1667,7 +1670,7 @@
         state.treesLost++;
         state.score -= 25;
       }
-      if (t.status === 'chopping' && t.timer > 10) {
+      if (t.status === 'chopping' && t.timer > 7) {
         t.status = 'dead';
         state.treesLost++;
         state.score -= 50;
@@ -1769,9 +1772,15 @@
       if (p.y > H || p.life <= 0) state.particles.splice(i, 1);
     }
 
-    // end if no living trees
-    const aliveTrees = trees.filter(t => t.status !== 'dead').length;
-    if (aliveTrees === 0) { endGame(); return; }
+    // End if all trees are dead, OR if no trees are recoverable (no healthy
+    // or sick remain) — the last chopped/burning ones are just waiting to die,
+    // so we short-circuit to the end screen immediately.
+    const deadCount   = trees.filter(t => t.status === 'dead').length;
+    const recoverable = trees.some(t => t.status === 'healthy' || t.status === 'sick');
+    if (deadCount === trees.length || !recoverable) {
+      endGame();
+      return;
+    }
 
     if (state.messageT > 0) state.messageT--;
     if (state.seasonBanner > 0) state.seasonBanner--;
@@ -2515,19 +2524,7 @@
     document.getElementById('s-lost').textContent = state.treesLost;
     document.getElementById('s-score').textContent = state.score;
 
-    // inventory scroll (1778-style)
-    const inv = document.getElementById('inv-scroll');
-    inv.innerHTML = `
-      <div class="hdr">INVENTORY SCROLL · 森 林 台 帳 · KISO-DANI</div>
-      <div class="inv-row"><span class="k">Sugi (杉) standing — Japanese cedar</span><span class="v">${sugi}</span></div>
-      <div class="inv-row"><span class="k">Hinoki (檜) standing — cypress, prized</span><span class="v">${hinoki}</span></div>
-      <div class="inv-row"><span class="k">Matsu (松) standing — pine</span><span class="v">${matsu}</span></div>
-      <div class="inv-row"><span class="k">Trees lost (枯)</span><span class="v">${state.treesLost}</span></div>
-      <div class="inv-row"><span class="k">Fires doused (消火)</span><span class="v">${state.firesDoused}</span></div>
-      <div class="inv-row"><span class="k">Sick trees tended (養生)</span><span class="v">${state.sickTended}</span></div>
-      <div class="inv-row"><span class="k">Poachers chased (捕縛)</span><span class="v">${state.poachersChased}</span></div>
-      <div class="inv-row"><span class="k">Nōgyō zensho scrolls found</span><span class="v">${state.scrollsFound}</span></div>
-    `;
+    // (inventory scroll element was removed from end-screen; stats grid covers it)
 
     const total = trees.length;
     const ratio = alive.length / total;
