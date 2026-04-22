@@ -279,18 +279,24 @@
   }
   canvas.infographic-panel {
     display: block;
-    width: 200px;
-    height: 56px;
+    width: 320px;
+    height: 90px;
+    max-width: 100%;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     background: #5c8a3a;
     border: 2px solid var(--ink);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
   .infographic-caption {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--ink);
-    line-height: 1.4;
+    line-height: 1.45;
+    max-width: 320px;
+  }
+  @media (max-width: 720px) {
+    .infographic-grid { grid-template-columns: 1fr; }
+    canvas.infographic-panel { width: 100%; height: auto; aspect-ratio: 200 / 56; }
   }
   .infographic-caption b { color: var(--red); }
 
